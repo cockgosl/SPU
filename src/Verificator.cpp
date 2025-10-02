@@ -1,6 +1,6 @@
-#include "Verificator.h"
+#include "stack.h"
 
-StackErr_t StackVerify(stack_t* stk, size_t indicator, StackErr_t* err){
+StackErr_t StackVerify(stack_t* stk, StackErr_t* err){
     if (stk == NULL) {
         *err = ADRESS;
         printf ("errorcode %d : the adress of your stack is wrong\n\n", *err);
@@ -13,7 +13,7 @@ StackErr_t StackVerify(stack_t* stk, size_t indicator, StackErr_t* err){
         *err = CAPACITY;
         printf ("errorcode %d : size > capacity\n\n", *err);
     }
-    if (indicator) {
+    if (stk -> canary_indicator) {
         if ((stk -> array)[0] != LEFT) {
             *err = CANARY_L;
             printf ("errorcode %d : left canary is dead, something is changing your buffer\n\n", *err);
