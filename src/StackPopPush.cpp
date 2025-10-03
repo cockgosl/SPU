@@ -1,7 +1,7 @@
 #include "stack.h"
 
-StackErr_t StackPop (stack_t* stk, type* value, StackErr_t* err) {
-    StackVerify(stk, err);
+StackErr_t StackPop (stack_t* stk, type* value) {
+    StackVerify(stk);
 
     if (stk -> size > 0) {
         *value = stk -> array[stk -> size -1  + stk -> canary_indicator];
@@ -9,12 +9,12 @@ StackErr_t StackPop (stack_t* stk, type* value, StackErr_t* err) {
         (stk -> size)--; 
         }
 
-    StackVerify(stk, err);
-    return *err;
+    StackVerify(stk);
+    return stk -> err;
 }
 
-StackErr_t StackPush (stack_t* stk, type value, StackErr_t* err) {
-    StackVerify(stk, err);
+StackErr_t StackPush (stack_t* stk, type value) {
+    StackVerify(stk);
     
     if (stk -> size >= stk -> capacity) {
         stk -> array = (type*) realloc (stk -> array, ((stk -> size) * 2 + 2 ) * sizeof(int));
@@ -26,6 +26,6 @@ StackErr_t StackPush (stack_t* stk, type value, StackErr_t* err) {
         (stk -> array) [stk -> capacity + 1] = RIGHT;
     }
 
-    StackVerify(stk, err);
-    return *err;
+    StackVerify(stk);
+    return stk -> err;
 }

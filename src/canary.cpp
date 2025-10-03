@@ -1,6 +1,6 @@
 #include "stack.h"
 
-StackErr_t canary(stack_t* stk,  StackErr_t* err) {
+StackErr_t canary(stack_t* stk) {
     size_t const capacity = stk -> capacity;
     
     type temp[100] = {};
@@ -14,5 +14,5 @@ StackErr_t canary(stack_t* stk,  StackErr_t* err) {
     (stk -> array) [0] = LEFT;
     (stk -> array) [capacity + 1] = RIGHT;
     stk -> canary_indicator = 1;
-    return *err;
+    return stk -> err;
 }
