@@ -1,31 +1,38 @@
-#include "StackPopPush.h"
+#include "stack.h"
 
-StackErr_t StackPop (stack_t* stk, type* value, size_t indicator, StackErr_t* err) {
-    StackVerify(stk, indicator, err);
-
-    if (stk -> size > 0) {
-        *value = stk -> array[stk -> size -1  + indicator];
-        stk -> array[stk -> size + -1 + indicator] = 0;
-        (stk -> size)--; 
+StackErr_t StackPop (stack_t* stk, type* value) {
+    StackErr_t error = StackVerify(stk);
+    if (error != ADRESS) {
+        if (stk->size > 0) {
+            *value = stk->array[stk->size - 1  + stk->canary_indicator];
+            stk->array[stk->size + -1 + stk->canary_indicator] = 0;
+            (stk->size)--; 
         }
+        else {
+            printf ("there are no elements\n");
+            error = NOTENOUGH;
+        }
+    }    
+    StackVerify (stk);
 
-    StackVerify(stk, indicator, err);
-    return *err;
+    return error;
 }
 
-StackErr_t StackPush (stack_t* stk, type value, size_t indicator,  StackErr_t* err) {
-    StackVerify(stk, indicator, err);
-    
-    if (stk -> size >= stk -> capacity) {
-        stk -> array = (type*) realloc (stk -> array, ((stk -> size) + 1 ) * sizeof(int));
-        stk -> capacity = stk -> size + 1;
+StackErr_t StackPush (stack_t* stk, type value) {
+    StackErr_t error = StackVerify(stk);
+    if (error != ADRESS) {
+        if (stk->size >= stk->capacity) {
+            stk->array = (type*) realloc (stk->array, ((stk->size) * 2 + 2 ) * sizeof(int));
+            error = StackVerify(stk);
+            stk->capacity = 2* ((stk->size) + 1 - stk->canary_indicator);
+        }
+        if (error != ADRESS_A) {
+            stk->array[stk->size + stk->canary_indicator] = value;
+            (stk->size)++;
+            if (stk->canary_indicator) {
+                (stk->array) [stk->capacity + 1] = RIGHT;
+            }
+        }
     }
-    stk -> array[stk -> size + indicator] = value;
-    if (indicator) {
-        (stk -> array) [stk -> size + 2] = RIGHT;
-    }
-    (stk -> size)++;
-
-    StackVerify(stk, indicator, err);
-    return *err;
+    return StackVerify(stk);
 }
