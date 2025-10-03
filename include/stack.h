@@ -17,13 +17,13 @@ enum StackErr_t {
     OKEY = 0,
     ADRESS = 1,
     ADRESS_A = 2,
-    CAPACITY = 3,
-    CANARY_L = 4,
-    CANARY_R = 5,
+    NOTENOUGH = 3,
+    CAPACITY = 4,
+    CANARY_L = 5,
+    CANARY_R = 6,
 };
 
 typedef struct {
-    StackErr_t err = OKEY;
     int* array;
     size_t size;
     size_t capacity;
