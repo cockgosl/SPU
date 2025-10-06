@@ -28,14 +28,11 @@ int main (int argc, char* argv[]) {
         }
         in++;
     }
-    fprintf(stderr, "buffer: %s\n", (char*)((size_t)buffer + 9));
     in = 0;
 
     char* pointer = buffer;
-    fprintf(stderr, "pointer before: %p\n", pointer);
-    fprintf(stderr, "size: %lu\n", strlen(buffer));
     while (1) {
-        if (strcmp (pointer, "PUSH") == 0) {
+        if (strcmp (pointer, "PUSH") == 0) { //почему buffer overflow... buffer нормального размера(
             fprintf (output, "%d ", 1);
             pointer = (char*) (size_t (pointer) + strlen ("PUSH"));
             while(!isalpha(*pointer)) {
@@ -45,7 +42,7 @@ int main (int argc, char* argv[]) {
                 pointer++;
                 fprintf(stderr, "%p\n", pointer);
             }
-            fprintf(stderr, "pointer:%s\n", pointer);
+            fprintf(stderr, "pointer:%s\n", pointer);// то, что я сравниваю с POP
         } 
         else if (strcmp (pointer, "POP") == 0) {
             fprintf (output, "%d ", 2);
@@ -102,4 +99,5 @@ char* ReadBuffer(FILE* text) {
     
     return buffer;   
 }
+
 
