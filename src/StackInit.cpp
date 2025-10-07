@@ -1,9 +1,9 @@
 #include "stack.h"
 
 StackErr_t StackInit (stack_t* stk, size_t capacity, size_t value) {
-    if (StackVerify(stk) != ADRESS) {
+    if (stk) {
         stk->array = (type*) calloc(capacity, value);
-        if (StackVerify(stk) != ADRESS_A) {
+        if (stk->array) {
             stk->capacity = capacity;
         }
     }

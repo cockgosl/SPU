@@ -5,79 +5,86 @@
 #include <sys/stat.h>
 #include <ctype.h>
 
+
 char* ReadBuffer (FILE* text);
 
-
 int main (int argc, char* argv[]) {
-    FILE* source = fopen (argv[1], "r" );
-    FILE* output = fopen (argv[2], "w");
+    if (argc == 3) {
+        FILE* source = fopen (argv[1], "rb" );
+        FILE* output = fopen (argv[2], "wb");
 
-    assert(source);
-    assert(output);
+        if (source && output) {
+            char* buffer = ReadBuffer (source);
 
-    char* buffer = ReadBuffer (source);
+            size_t in = 0;
+            size_t size = strlen(buffer);
 
-    size_t in = 0;
-
-    fprintf(stderr, "buffer: %s\n", buffer);
-    fprintf(stderr, "size: %lu\n", strlen(buffer));
-
-    while (buffer[in] != '\0') { 
-        if (buffer[in] == '\n' || buffer[in] == ' ') { 
-            buffer[in] = '\0';
-        }
-        in++;
-    }
-    in = 0;
-
-    char* pointer = buffer;
-    while (1) {
-        if (strcmp (pointer, "PUSH") == 0) { //почему buffer overflow... buffer нормального размера(
-            fprintf (output, "%d ", 1);
-            pointer = (char*) (size_t (pointer) + strlen ("PUSH"));
-            while(!isalpha(*pointer)) {
-                if (*pointer != '\0') {
-                    fprintf (output, "%c", *pointer );
+            while (buffer[in] != '\0') { 
+                if (buffer[in] == '\n' || buffer[in] == ' ' || buffer[in] == '\r') { 
+                buffer[in] = '\0';
                 }
-                pointer++;
-                fprintf(stderr, "%p\n", pointer);
+                in++;
             }
-            fprintf(stderr, "pointer:%s\n", pointer);// то, что я сравниваю с POP
-        } 
-        else if (strcmp (pointer, "POP") == 0) {
-            fprintf (output, "%d ", 2);
-            pointer = (char*) (size_t (pointer) + strlen ("POP") + 1);
-        }
-        else if (strcmp (pointer, "ADD") == 0) {
-            fprintf (output, "%d\n", 3);
-            pointer = (char*) (size_t (pointer) + strlen ("ADD"));
-        }
-        else if (strcmp (pointer, "SUB") == 0) {
-            fprintf (output, "%d\n", 4);
-            pointer = (char*) (size_t (pointer) + strlen ("SUB"));
-        }
-        else if (strcmp (pointer, "MUL") == 0) {
-            fprintf (output, "%d\n", 5);
-            pointer = (char*) (size_t (pointer) + strlen ("MUL"));
-        }
-        else if (strcmp (pointer, "DIV") == 0) {
-            fprintf (output, "%d\n", 6);
-            pointer = (char*) (size_t (pointer) + strlen ("DIV"));
-        }
-        else if (strcmp (pointer, "SQRT") == 0) {
-            fprintf (output, "%d\n", 7);
-            pointer = (char*) (size_t (pointer) + strlen ("SQRT"));
-        }
-        else if (strcmp (pointer, "HLT") == 0) {
-            fprintf (output, "%d\n", 0);
-            break;
+
+            char* pointer = buffer;
+
+            while ( pointer < buffer + size) {
+
+                if (strcmp (pointer, "PUSH") == 0) {
+                    fprintf (output, "%d", 1);
+                    pointer += strlen ("PUSH");
+                    while(!isalpha(*pointer)) {
+                        if (*pointer != '\0') {
+                            fprintf (output, "%c", *pointer );
+                        }
+                        pointer++;
+                    }
+                } 
+                else if (strcmp (pointer, "POP") == 0) {
+                    fprintf (output, "%d", 2);
+                    pointer += strlen ("POP");
+                }
+                else if (strcmp (pointer, "ADD") == 0) {
+                    fprintf (output, "%d", 3);
+                    pointer += strlen ("ADD");
+                }
+                else if (strcmp (pointer, "SUB") == 0) {
+                    fprintf (output, "%d", 4);
+                    pointer += strlen ("SUB");
+                }
+                else if (strcmp (pointer, "MUL") == 0) {
+                    fprintf (output, "%d", 5);
+                    pointer += strlen ("MUL");
+                }
+                else if (strcmp (pointer, "DIV") == 0) {
+                    fprintf (output, "%d", 6);
+                    pointer += strlen ("DIV");
+                }
+                else if (strcmp (pointer, "SQRT") == 0) {
+                    fprintf (output, "%d", 7);
+                    pointer += strlen ("SQRT");
+                }
+                else if (strcmp (pointer, "HLT") == 0) {
+                    fprintf (output, "%d", 0);
+                    break;
+                }
+                else if(*pointer == '\0') {
+                    pointer++;
+                }
+                else {
+                    fprintf (stderr, "syntax error\n");
+                    pointer++;
+                }
+            }
+            free(buffer);
         }
         else {
-            fprintf (stderr, "syntax error\n");
-            pointer++;
+            printf ("can't read the given files\n");
         }
     }
-    free(buffer);
+    else {
+            printf("the amount of arguments in terminal is wrong\n");
+    }
 }
 
 
@@ -99,5 +106,4 @@ char* ReadBuffer(FILE* text) {
     
     return buffer;   
 }
-
 

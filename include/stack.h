@@ -4,12 +4,6 @@
 #define LEFT 0x7BADF00D
 #define RIGHT 0x7EADBEEF
 
-#define DEBUG 1
-#ifndef DEBUG
-#define StackPop (stack_t* stk, type* value ,StackErr_t* err) StackPop (stack_t* stk, type* value , size_t line, StackErr_t* err) 
-#define  StackErr_t*err __LINE__,StackErr_t*err
-#define DEBUG 1
-#endif  
 
 typedef int type;
 
@@ -35,5 +29,7 @@ StackErr_t StackInit (stack_t* stk, size_t capacity, size_t value);
 StackErr_t StackPop (stack_t* stk, type* value );
 StackErr_t StackPush (stack_t* stk, type value);
 StackErr_t StackVerify(stack_t* stk);
+void StackDump (stack_t* stk, size_t line);
+void StackDestroy (stack_t* stk);
 
   

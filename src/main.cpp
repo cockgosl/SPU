@@ -8,6 +8,8 @@ int main() {
 
     canary (&stk1);
 
+    StackDump (&stk1, __LINE__);
+
     for (size_t r = 0; r < 6; r++) {
         StackPush(&stk1, r);
     }
@@ -25,6 +27,8 @@ int main() {
     for (size_t r = 0; r < 6; r++) {
         StackPush(&stk1, r);
     }
-    free (stk1.array);
-    stk1.canary_indicator = 0;
+    
+    StackDestroy (&stk1);
+
+    StackDump(&stk1, __LINE__);
 }
