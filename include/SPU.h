@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "stack.h"
 
@@ -17,10 +18,12 @@ enum SPUErorr_t {
 typedef struct {
     stack_t stack = {};
     type* Bytecode;
-    int InstrPointer;
-    type* Register;
+    int InstrPointer = 0;
+    type Register[17] = {};
 }   SPU_t;
 
 SPUErorr_t SPUInit( SPU_t* spu, FILE* bytecode, size_t value);
-size_t Capacity (FILE* bytecode);
+void SPUDestroy (SPU_t* spu);
+SPUErorr_t ByteCodeInit (SPU_t* spu, FILE* bytecode, size_t value);
+SPUErorr_t SPUDo (SPU_t* spu);
 char* ReadBuffer(FILE* text);
