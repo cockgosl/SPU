@@ -1,4 +1,0 @@
-PUSH 25
-PUSH 72
-MUL
-HLT
