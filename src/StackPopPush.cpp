@@ -1,10 +1,11 @@
 #include "stack.h"
 
-StackErr_t StackPop (stack_t* stk, type* value) {
+type StackPop (stack_t* stk) {
     StackErr_t error = StackVerify(stk);
+    type value = 0;
     if (error != ADRESS) {
         if (stk->size > 0) {
-            *value = stk->array[stk->size - 1  + stk->canary_indicator];
+            value = stk->array[stk->size - 1  + stk->canary_indicator];
             stk->array[stk->size + -1 + stk->canary_indicator] = 0;
             (stk->size)--; 
         }
@@ -15,7 +16,7 @@ StackErr_t StackPop (stack_t* stk, type* value) {
     }    
     StackVerify (stk);
 
-    return error;
+    return value;
 }
 
 StackErr_t StackPush (stack_t* stk, type value) {
