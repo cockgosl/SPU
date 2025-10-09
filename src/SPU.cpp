@@ -140,7 +140,6 @@ SPUErorr_t SPUDo (SPU_t* spu) {
             case 33:
                 spu->InstrPointer++;
                 switch((spu->Bytecode)[spu->InstrPointer]) {
-                    //We need to know about the condition of the register, the first digit in Register contains information about it
                     case 1:
                         (spu->Register)[1] = StackPop(&(spu->stack));
                         (spu->Register)[0] += 1;
@@ -299,4 +298,5 @@ SPUErorr_t SPUDo (SPU_t* spu) {
         }  
     }
     return STACK;
+
 }
