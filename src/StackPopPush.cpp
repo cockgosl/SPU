@@ -25,6 +25,9 @@ StackErr_t StackPush (stack_t* stk, type value) {
         if (stk->size >= stk->capacity) {
             stk->array = (type*) realloc (stk->array, ((stk->size) * 2 + 2 ) * sizeof(int));
             stk->capacity = 2* ((stk->size) + 1 - stk->canary_indicator);
+            for (size_t in = stk->size; in < stk->capacity; in++) {
+                (stk->array)[in] = 0;
+            }
         }
         if (stk->array) {
             stk->array[stk->size + stk->canary_indicator] = value;
