@@ -4,6 +4,12 @@ int main (int argc, char* argv[]) {
 
     size_t counter = 0;
 
+    int labels[10] = {};
+
+    for (size_t in = 0; in < 10; in ++) {
+        labels[in] = -1;
+    }
+
     if (argc == 3) {
         FILE* source = fopen (argv[1], "rb" );
         FILE* output = fopen (argv[2], "wb");
@@ -29,14 +35,19 @@ int main (int argc, char* argv[]) {
                     counter++;
                     fprintf (output, "%d,", 1);
                     pointer += strlen ("PUSH");
-                    while(!isalpha(*pointer)) {
-                        if (isdigit(*pointer)) {
+                    while(!isalpha(*pointer) ) {
+                        if (isdigit(*pointer) || (*pointer) == '-') {
                             fprintf (output, "%c", *pointer );
                         }
                         pointer++;
                     }
                     fprintf (output, ",");
                     counter++;
+                }
+                else if (strcmp (pointer, ":") == 0) {
+                    counter++;
+                    pointer++;
+                    if (atoi (pointer))
                 }
                 else if (strcmp (pointer, "PUSHR") == 0) {
                     counter++;
@@ -241,6 +252,7 @@ int main (int argc, char* argv[]) {
                         }
                         pointer++;
                     }
+                    counter++;
                     fprintf (output, ",");
                 }
                 else if (strcmp (pointer , "JNE") == 0) {
@@ -253,6 +265,7 @@ int main (int argc, char* argv[]) {
                         }
                         pointer++;
                     }
+                    counter++;
                     fprintf (output, ",");
                 }
                 else if (strcmp (pointer , "JE") == 0) {
@@ -265,6 +278,7 @@ int main (int argc, char* argv[]) {
                         }
                         pointer++;
                     }
+                    counter++;
                     fprintf (output, ",");
                 }
                 else if (strcmp (pointer , "JAE") == 0) {
@@ -277,6 +291,7 @@ int main (int argc, char* argv[]) {
                         }
                         pointer++;
                     }
+                    counter++;
                     fprintf (output, ",");
                 }
                 else if (strcmp (pointer , "JBE") == 0) {
@@ -289,6 +304,7 @@ int main (int argc, char* argv[]) {
                         }
                         pointer++;
                     }
+                    counter++;
                     fprintf (output, ",");
                 }
                 else if (strcmp (pointer , "JA") == 0){
@@ -301,6 +317,7 @@ int main (int argc, char* argv[]) {
                         }
                         pointer++;
                     }
+                    counter++;
                     fprintf (output, ",");
                 }
                 else if (strcmp (pointer , "JB") == 0) {
@@ -313,6 +330,7 @@ int main (int argc, char* argv[]) {
                         }
                         pointer++;
                     }
+                    counter++;
                     fprintf (output, ",");
                 }
                 else if (*pointer == '\0') {
