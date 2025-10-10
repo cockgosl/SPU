@@ -26,7 +26,7 @@ typedef struct {
 
 StackErr_t canary(stack_t* stk);
 StackErr_t StackInit (stack_t* stk, size_t capacity, size_t value);
-StackErr_t StackPop (stack_t* stk, type* value );
+type StackPop (stack_t* stk);
 StackErr_t StackPush (stack_t* stk, type value);
 StackErr_t StackVerify(stack_t* stk);
 void StackDump (stack_t* stk, size_t line);
