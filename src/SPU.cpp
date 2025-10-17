@@ -3,6 +3,10 @@
 int main() {
     SPU_t SPU1 = {};
     FILE* bytecode = fopen ("asm+SPU/asambler+bytecode/bytecode.txt", "rb");
+    if (bytecode == NULL) {
+        printf ("something is wrong with FILE");
+        return 0;
+    }
     SPUInit (&SPU1, bytecode, sizeof(type));
 
     SPUDo (&SPU1);
@@ -10,13 +14,24 @@ int main() {
     SPUDestroy(&SPU1);
 }
 
-SPUErorr_t SPUInit( SPU_t* spu, FILE* bytecode, size_t value) {
+//TODO: enum for the switch
+//TODO: convert double to int
+//TODO: the condition of register with one loop
+
+
+SPUErorr_t SPUInit (SPU_t* spu, FILE* bytecode, size_t value) {
     if (bytecode && spu) {
 
         StackInit (&(spu->stack), 5, value);
 
+        StackInit (&(spu->retAddr), 5, value);
+
         ByteCodeInit(spu, bytecode, value);
         
+        
+    }
+    else {
+        printf ("It canot be initialized, something is wrong with files");
     }
     return STACK;
 }
@@ -38,7 +53,7 @@ SPUErorr_t ByteCodeInit (SPU_t* spu, FILE* bytecode, size_t value) {
 
     size_t in = 0;
 
-    while (buffer[in] != '\0' || buffer[in] == '|') { 
+    while (buffer[in] != '\0') { 
         if (buffer[in] == ',') { 
             buffer[in] = '\0';
         }
@@ -70,31 +85,31 @@ SPUErorr_t SPUDo (SPU_t* spu) {
 
     while (1) {
         switch ((spu->Bytecode)[spu->InstrPointer]) {
-            case 1:
+            case PUSH:
                 spu->InstrPointer++;
                 StackPush (&(spu->stack), (spu->Bytecode)[spu->InstrPointer]);
                 spu->InstrPointer++;
                 break;
-            case 2:
+            case POP:
                 spu->InstrPointer++;
                 printf ("OUT: %d\n", StackPop(&(spu->stack)));
                 break;
-            case 3:
+            case ADD:
                 spu->InstrPointer++;
                 StackPush (&(spu->stack), StackPop(&(spu->stack)) + StackPop(&(spu->stack)) );
                 break;
-            case 4:
+            case SUB:
                 spu->InstrPointer++;
                 temp1 = StackPop(&(spu->stack));
                 temp1 = temp1 - StackPop(&(spu->stack));
                 StackPush (&(spu->stack), temp1);
                 temp1 = 0;
                 break;
-            case 5:
+            case MUL:
                 spu->InstrPointer++;
                 StackPush (&(spu->stack), StackPop(&(spu->stack)) * StackPop(&(spu->stack)));
                 break;
-            case 6:
+            case DIV:
                 spu->InstrPointer++;
                 temp1 = StackPop(&(spu->stack));
                 temp2 = StackPop(&(spu->stack));
@@ -107,7 +122,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 temp1 = 0;
                 temp2 = 0;
                 break;
-            case 7:
+            case SQRT:
                 spu->InstrPointer++;
                 temp1 = StackPop(&(spu->stack));
                 tempd = sqrt(double (temp1));
@@ -120,7 +135,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 tempd = 0;
                 temp1 = 0;
                 break;
-            case 16:
+            case IN:
                 spu->InstrPointer++;
                 while (temp1 != 1 ) {
                     printf ("write the value you want to PUSH: ");
@@ -139,7 +154,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 crytieria = 0;
                 temp2 = 0;
                 break;
-            case 33:
+            case POPR:
                 spu->InstrPointer++;
                 switch((spu->Bytecode)[spu->InstrPointer]) {
                     //We need to know about the condition of the register, the first digit in Register contains information about it
@@ -227,7 +242,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                         break;
                 }
                 break;
-            case 42:
+            case PUSHR:
                 //We need to know about the condition of the register, the first digit in Register contains information about it
                 spu->InstrPointer++;
                 crytieria = (size_t)(pow(2,(spu->Bytecode)[spu->InstrPointer]-1));
@@ -240,11 +255,11 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 spu->InstrPointer++;
                 crytieria = 0;
                 break;
-            case 50:
+            case JMP:
                 spu->InstrPointer++;
                 spu->InstrPointer = (spu->Bytecode)[spu->InstrPointer];
                 break;
-            case 51:
+            case JNE:
                 spu->InstrPointer++;
                 temp1 = StackPop(&(spu->stack));
                 temp2 = StackPop(&(spu->stack));
@@ -259,7 +274,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 temp1 = 0;
                 temp2 = 0;
                 break;
-            case 52:
+            case JE:
                 spu->InstrPointer++;
                 temp1 = StackPop(&(spu->stack));
                 temp2 = StackPop(&(spu->stack));
@@ -274,7 +289,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 temp1 = 0;
                 temp2 = 0;
                 break;
-            case 53:
+            case JAE:
                 spu->InstrPointer++;
                 temp1 = StackPop (&(spu->stack));
                 temp2 = StackPop (&(spu->stack));
@@ -289,7 +304,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 temp1 = 0;
                 temp2 = 0;
                 break;
-            case 54:
+            case JBE:
                 spu->InstrPointer++;
                 temp1 = StackPop (&(spu->stack));
                 temp2 = StackPop (&(spu->stack));
@@ -304,7 +319,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 temp1 = 0;
                 temp2 = 0;
                 break;
-            case 55:
+            case JA:
                 spu->InstrPointer++;
                 temp1 = StackPop (&(spu->stack));
                 temp2 = StackPop (&(spu->stack));
@@ -319,7 +334,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 temp1 = 0;
                 temp2 = 0;
                 break;
-            case 56:
+            case JB:
                 spu->InstrPointer++;
                 temp1 = StackPop (&(spu->stack));
                 temp2 = StackPop (&(spu->stack));
@@ -334,7 +349,7 @@ SPUErorr_t SPUDo (SPU_t* spu) {
                 temp1 = 0;
                 temp2 = 0;
                 break;
-            case 0:
+            case HLT:
                 printf("the end of process, value: %d\n", (spu->stack).array[0]);
                 spu->InstrPointer = 0;
                 indicator = 1;
