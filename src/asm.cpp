@@ -1,5 +1,6 @@
 #include "SPU.h"
 
+//Macros for finding register
 #define ONE_REG_CHECK(Register)\
     if (strcmp (pointer, "R" #Register "X") == 0) {\
         sprintf (Bytecode, "%d", #Register[0] - 'A' + 1);\
@@ -31,7 +32,21 @@
     ONE_REG_CHECK(O)\
     ONE_REG_CHECK(P)\
 
+//PUSHM, POPM, POPR, PUSHR are similar: they all work with register. It's reasonable to make a macros:
+#define CHECKR(COMMAND)\
+    else if (strcmp (pointer, #COMMAND) == 0) {\
+        counter++;\
+        sprintf(Bytecode, "%d", COMMAND);\
+        capacity++;\
+        Bytecode += strlen (Bytecode) + 1;\
+        pointer += strlen (#COMMAND) + 1;\
+        \
+        All_Reg_Check\
+        \
+        counter++;\
+    }\
 
+//Macros for finding JUMP
 #define ONE_JUMP_CHECK(JUMP)\
     else if (strcmp (pointer , "JMP" #JUMP "") == 0) {\
         counter++;\
@@ -175,37 +190,14 @@ int main (int argc, char* argv[]) {
                     }
                     
                 }
-                else if (strcmp (pointer, "PUSHR") == 0) {
-                    counter++;
-                    sprintf(Bytecode, "%d", PUSHR);
-                    capacity++;
-                    Bytecode += strlen (Bytecode) + 1;
-                    pointer += strlen ("PUSHR") + 1; //skipping backspace
 
-                    All_Reg_Check
+                CHECKR (PUSHR)  
 
-                    counter++;
-                }  
+                CHECKR (POPR)
 
-                else if (strcmp (pointer, "POPR") == 0) {
-                    counter++;
-                    sprintf(Bytecode, "%d", POPR);
-                    capacity++;
-                    Bytecode += strlen ("33") + 1;
-                    pointer += strlen ("POPR");
-                    
-                    while(!isalpha(*pointer) && *pointer != ';') {
-                        pointer++;
-                    }
+                CHECKR (PUSHM)
 
-                    All_Reg_Check
-
-                    counter++;
-                }
-
-                else if (strcmp (pointer, "PUSHM") == 0) {
-                    counter++;
-                }
+                CHECKR (POPM)
 
                 CHECK(OUT)
 
@@ -227,9 +219,9 @@ int main (int argc, char* argv[]) {
 
                 else if (strcmp (pointer , "CALL") == 0 ) {
                     counter++;
-                    sscanf("48", "%s", Bytecode);
+                    sprintf(Bytecode, "%d", CALL);
                     capacity++;
-                    Bytecode += strlen ("48") + 1;
+                    Bytecode += strlen (Bytecode) + 1;
                     pointer += strlen ("CALL");
                     pointer += 1; //skiping backspace
                     if (*pointer == ':') {
@@ -262,9 +254,9 @@ int main (int argc, char* argv[]) {
                 }
                 else if (strcmp (pointer, "HLT") == 0) {
                     counter++;
-                    sscanf ("0", "%s", Bytecode);
+                    sprintf (Bytecode, "%d", HLT);
                     capacity++;
-                    Bytecode += strlen ("0") + 1;
+                    Bytecode += strlen (Bytecode) + 1;
                     strcat (Bytecode, "|");
                     sprintf (Bytecode + strlen("|"), "%lu", counter);
                     capacity++;
