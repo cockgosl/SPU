@@ -191,6 +191,27 @@ void SPUDo (SPU_t* spu) {
                 spu->InstrPointer++;
                 crytieria = 0;
                 break;
+            case PUSHM:
+                spu->InstrPointer++;
+                crytieria = (size_t)(pow(2,(spu->Bytecode)[spu->InstrPointer]-1));
+                if (((spu->Register)[0] & crytieria) >= (spu->Bytecode)[spu->InstrPointer]){
+                    StackPush (&(spu->stack), spu->RAM[(spu->Bytecode)[spu->InstrPointer]]);
+                }
+                else {
+                    printf("invalid instruction(Register is empty)\n");
+                }
+                spu->InstrPointer++;
+                crytieria = 0;
+                break;
+            case POPM:
+                spu->InstrPointer++;
+                for (int c = 1; c < 17; c++) {
+                    if ((spu->Bytecode)[spu->InstrPointer] == c) {
+                        (spu->RAM)[spu->Register[c]] = StackPop(&(spu->stack));
+                        spu->InstrPointer++;
+                    }
+                }
+                break;
             case CALL:
                 spu->InstrPointer++;
                 StackPush (&(spu->retAddr), (spu->Bytecode)[spu->InstrPointer + 1]);
@@ -216,8 +237,9 @@ void SPUDo (SPU_t* spu) {
             JUMP_CHECK(JMPB, <)
 
             case DRAW:
+                spu->InstrPointer++;
                 for (int i = 0; i < 100; i ++) {
-                    printf ("%d", (spu->RAM)[i]);
+                    printf ("%d  ", (spu->RAM)[i]);
                     if ((i + 1) % 10 == 0) {
                         printf ("\n");
                     }
