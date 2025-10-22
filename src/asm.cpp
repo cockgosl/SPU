@@ -1,5 +1,95 @@
 #include "SPU.h"
 
+#define ONE_REG_CHECK(Register)\
+    if (strcmp (pointer, "R" #Register "X") == 0) {\
+        sprintf (Bytecode, "%d", #Register[0] - 'A' + 1);\
+        capacity++;\
+        if ((#Register[0] - 'A' + 1) >= 10 && (#Register[0] - 'A' + 1 <= 16)) {\
+            Bytecode += 3;\
+        }\
+        else {\
+            Bytecode += 2;\
+        }\
+        pointer += strlen ("R" #Register "X");\
+    }\
+
+#define All_Reg_Check\
+    ONE_REG_CHECK(A)\
+    ONE_REG_CHECK(B)\
+    ONE_REG_CHECK(C)\
+    ONE_REG_CHECK(D)\
+    ONE_REG_CHECK(E)\
+    ONE_REG_CHECK(F)\
+    ONE_REG_CHECK(G)\
+    ONE_REG_CHECK(H)\
+    ONE_REG_CHECK(I)\
+    ONE_REG_CHECK(J)\
+    ONE_REG_CHECK(K)\
+    ONE_REG_CHECK(L)\
+    ONE_REG_CHECK(M)\
+    ONE_REG_CHECK(N)\
+    ONE_REG_CHECK(O)\
+    ONE_REG_CHECK(P)\
+
+
+#define ONE_JUMP_CHECK(JUMP)\
+    else if (strcmp (pointer , "JMP" #JUMP "") == 0) {\
+        counter++;\
+        if (strlen (#JUMP) == 2) {\
+            sprintf (Bytecode, "%d", #JUMP[0] + #JUMP[1]);\
+        }\
+        if (strlen (#JUMP) == 1) {\
+            sprintf (Bytecode, "%d", #JUMP[0]);\
+        }\
+        capacity++;\
+        Bytecode += strlen (Bytecode) + 1;\
+        pointer += strlen ("JMP" #JUMP "") + 1;\
+        while(isdigit(*pointer) || *pointer == ':') {\
+            if (isdigit(*pointer)) {\
+                sscanf (pointer, "%s", Bytecode );\
+                capacity++;\
+                Bytecode += strlen (pointer) + 1;\
+                pointer += strlen (pointer);\
+            }\
+            else if (*pointer == ':') {\
+                pointer++;\
+                if (isdigit (*pointer)) {\
+                    sprintf (Bytecode, "%d", labels[*pointer - '0']);\
+                    capacity++;\
+                    Bytecode += strlen (Bytecode) + 1;\
+                }\
+                else {\
+                    printf ("syntax error\n");\
+                }\
+            }\
+            else {\
+                printf ("syntax error\n");\
+            }\
+            pointer++;\
+        }\
+        counter++;\
+    }\
+
+#define ALL_JUMPS_CHECK\
+    ONE_JUMP_CHECK(D)\
+    ONE_JUMP_CHECK(A)\
+    ONE_JUMP_CHECK(B)\
+    ONE_JUMP_CHECK(E)\
+    ONE_JUMP_CHECK(NE)\
+    ONE_JUMP_CHECK(AE)\
+    ONE_JUMP_CHECK(BE)\
+
+#define CHECK(COMMAND)\
+    else if (strcmp (pointer, #COMMAND) == 0) {\
+        counter++;\
+        temp1 = #COMMAND[0] * 10 + #COMMAND[1];\
+        sprintf(Bytecode, "%d", temp1);\
+        capacity++;\
+        Bytecode += strlen (Bytecode) + 1;\
+        pointer += strlen (#COMMAND);\
+        temp1 = 0;\
+    }\
+
 int main (int argc, char* argv[]) {
 
     size_t counter = 0;
@@ -7,6 +97,11 @@ int main (int argc, char* argv[]) {
     size_t PassageNumber = 1;
 
     int labels[10] = {};
+
+    size_t capacity = 0;
+    char* temp = NULL;
+
+    int temp1 = 0;
 
     for (size_t in = 0; in < 10; in ++) {
         labels[in] = -1;
@@ -22,33 +117,41 @@ int main (int argc, char* argv[]) {
             size_t size = strlen(buffer);
 
             for (size_t in = 0; in < size; in++) { 
-                if (buffer[in] == '\n' || buffer[in] == ' ' || buffer[in] == '\r') { 
+                if (buffer[in] == '\n' || buffer[in] == ' ' || buffer[in] == '\r' ) { 
                 buffer[in] = '\0';
                 }
             }
+
+            char* Bytecode = (char*)(calloc(size, sizeof(char)));
+            temp = Bytecode;
+            assert(Bytecode);
 
             char* pointer = buffer;
 
             while ( pointer < buffer + size ) {
                 if (strcmp (pointer, "PUSH") == 0) {
                     counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 1);
+                    sprintf (Bytecode, "%d", PUSH);
+                    Bytecode += strlen(Bytecode) + 1;
+                    capacity++;
+                    pointer += strlen ("PUSH") + 1; //skipping backspace
+                    if (isdigit(*pointer) || (*pointer) == '-') {
+                        sscanf (pointer, "%s", Bytecode);
+                        Bytecode += strlen(pointer) + 1;
+                        pointer += strlen(pointer);
+                        capacity++;
                     }
-                    pointer += strlen ("PUSH");
-                    while(!isalpha(*pointer)) {
-                        if ((isdigit(*pointer) || (*pointer) == '-') && PassageNumber == 2) {
-                            fprintf (output, "%c", *pointer );
-                        }
-                        pointer++;
-                        if (*pointer == ':') {
-                            break;
-                        }
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
+                    else {
+                        printf ("syntax error\n");
                     }
                     counter++;
+                }
+                else if (*pointer == ';') {
+                    pointer++;
+                    while (*pointer != ';') {
+                        pointer++;
+                    }
+                    pointer++;
                 }
                 else if (*pointer == ':') {
                     pointer++;
@@ -59,12 +162,12 @@ int main (int argc, char* argv[]) {
                         else if (labels[atoi(pointer)] != -1 && PassageNumber == 1) {
                             printf ("syntax error\n");
                         }
-                        labels[atoi(pointer)] = counter - 1; //index in bytecode must lack one in comparesent with counter
+                        labels[atoi(pointer)] = counter ;
                     }
                     else {
                         printf ("label is incorrect\n");
                     }
-                    while (!isalpha(*pointer)) {
+                    while (!isalpha(*pointer) && *pointer != ';') {
                         pointer++;
                         if (*pointer == ':') {
                             break;
@@ -74,299 +177,73 @@ int main (int argc, char* argv[]) {
                 }
                 else if (strcmp (pointer, "PUSHR") == 0) {
                     counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 42);
-                    }
-                    pointer += strlen ("PUSHR");
-                    while(!isalpha(*pointer)) {
-                        pointer++;
-                    }
+                    sprintf(Bytecode, "%d", PUSHR);
+                    capacity++;
+                    Bytecode += strlen (Bytecode) + 1;
+                    pointer += strlen ("PUSHR") + 1; //skipping backspace
 
-                    if (strcmp (pointer, "RAX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 1);
-                        }
-                        pointer += strlen ("RAX");
-                    }
-                    else if (strcmp (pointer, "RBX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 2);
-                        }
-                        pointer += strlen ("RBX");
-                    }
-                    else if (strcmp (pointer, "RCX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 3);
-                        }
-                        pointer += strlen ("RCX");
-                    }
-                    else if (strcmp (pointer, "RDX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 4);
-                        }
-                        pointer += strlen ("RDX");
-                    }
-                    else if (strcmp (pointer, "REX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 5);
-                        }
-                        pointer += strlen ("REX");
-                    }
-                    else if (strcmp (pointer, "RFX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 6);
-                        }
-                        pointer += strlen ("RFX");
-                    }
-                    else if (strcmp (pointer, "RGX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 7);
-                        }
-                        pointer += strlen ("RGX");
-                    }
-                    else if (strcmp (pointer, "RHX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 8);
-                        }
-                        pointer += strlen ("RHX");
-                    }
-                    else if (strcmp (pointer, "RIX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 9);
-                        }
-                        pointer += strlen ("RIX");
-                    }
-                    else if (strcmp (pointer, "RJX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 10);
-                        }
-                        pointer += strlen ("RJX");
-                    }
-                    else if (strcmp (pointer, "RKX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 11);
-                        }
-                        pointer += strlen ("RKX");
-                    }
-                    else if (strcmp (pointer, "RLX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 12);
-                        }
-                        pointer += strlen ("RLX");
-                    }
-                    else if (strcmp (pointer, "RMX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 13);
-                        }
-                        pointer += strlen ("RMX");
-                    }
-                    else if (strcmp (pointer, "RNX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 14);
-                        }
-                        pointer += strlen ("RNX");
-                    }
-                    else if (strcmp (pointer, "ROX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 15);
-                        }
-                        pointer += strlen ("ROX");
-                    }
-                    else if (strcmp (pointer, "RPX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 16);
-                        }
-                        pointer += strlen ("RPX");
-                    }
-                    else {
-                        ;
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
-                    }
+                    All_Reg_Check
+
                     counter++;
                 }  
 
-                else if (strcmp (pointer, "OUT") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 2);
-                    }
-                    pointer += strlen ("OUT");
-                }
                 else if (strcmp (pointer, "POPR") == 0) {
                     counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 33);
-                    }
+                    sprintf(Bytecode, "%d", POPR);
+                    capacity++;
+                    Bytecode += strlen ("33") + 1;
                     pointer += strlen ("POPR");
                     
-                    while(!isalpha(*pointer)) {
+                    while(!isalpha(*pointer) && *pointer != ';') {
                         pointer++;
                     }
 
-                    if (strcmp (pointer, "RAX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 1);
-                        }
-                        pointer += strlen ("RAX");
-                    }
-                    else if (strcmp (pointer, "RBX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 2);
-                        }
-                        pointer += strlen ("RBX");
-                    }
-                    else if (strcmp (pointer, "RCX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 3);
-                        }
-                        pointer += strlen ("RCX");
-                    }
-                    else if (strcmp (pointer, "RDX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 4);
-                        }
-                        pointer += strlen ("RDX");
-                    }
-                    else if (strcmp (pointer, "REX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 5);
-                        }
-                        pointer += strlen ("REX");
-                    }
-                    else if (strcmp (pointer, "RFX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 6);
-                        }
-                        pointer += strlen ("RFX");
-                    }
-                    else if (strcmp (pointer, "RGX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 7);
-                        }
-                        pointer += strlen ("RGX");
-                    }
-                    else if (strcmp (pointer, "RHX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 8);
-                        }
-                        pointer += strlen ("RHX");
-                    }
-                    else if (strcmp (pointer, "RIX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 9);
-                        }
-                        pointer += strlen ("RIX");
-                    }
-                    else if (strcmp (pointer, "RJX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 10);
-                        }
-                        pointer += strlen ("RJX");
-                    }
-                    else if (strcmp (pointer, "RKX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 11);
-                        }
-                        pointer += strlen ("RKX");
-                    }
-                    else if (strcmp (pointer, "RLX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 12);
-                        }
-                        pointer += strlen ("RLX");
-                    }
-                    else if (strcmp (pointer, "RMX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 13);
-                        }
-                        pointer += strlen ("RMX");
-                    }
-                    else if (strcmp (pointer, "RNX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 14);
-                        }
-                        pointer += strlen ("RNX");
-                    }
-                    else if (strcmp (pointer, "ROX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 15);
-                        }
-                        pointer += strlen ("ROX");
-                    }
-                    else if (strcmp (pointer, "RPX") == 0) {
-                        if (PassageNumber == 2) {
-                            fprintf (output, "%d", 16);
-                        }
-                        pointer += strlen ("RPX");
-                    }
-                    else {
-                        ;
-                    }
-                    if (PassageNumber == 2) {
-                            fprintf (output, ",");
-                        }
+                    All_Reg_Check
+
                     counter++;
                 }
-                else if (strcmp (pointer, "ADD") == 0) {
+
+                else if (strcmp (pointer, "PUSHM") == 0) {
                     counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 3);
-                    }
-                    pointer += strlen ("ADD");
                 }
-                else if (strcmp (pointer, "SUB") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 4);
-                    }
-                    pointer += strlen ("SUB");
-                }
-                else if (strcmp (pointer, "MUL") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 5);
-                    }
-                    pointer += strlen ("MUL");
-                }
-                else if (strcmp (pointer, "DIV") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 6);
-                    }
-                    pointer += strlen ("DIV");
-                }
-                else if (strcmp (pointer, "SQRT") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 7);
-                    }
-                    pointer += strlen ("SQRT");
-                }
-                else if (strcmp (pointer , "IN") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 16);
-                    }
-                    pointer += strlen ("IN");
-                }
+
+                CHECK(OUT)
+
+                CHECK(ADD)
+
+                CHECK(SUB)
+
+                CHECK(MUL)
+
+                CHECK(DIV)
+                
+                CHECK(SQRT)
+
+                CHECK(IN)
+
+                CHECK(RET)
+
+                CHECK(DRAW)
+
                 else if (strcmp (pointer , "CALL") == 0 ) {
                     counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 48);
-                    }
+                    sscanf("48", "%s", Bytecode);
+                    capacity++;
+                    Bytecode += strlen ("48") + 1;
                     pointer += strlen ("CALL");
                     pointer += 1; //skiping backspace
                     if (*pointer == ':') {
                         pointer++;
                         if (isdigit(*pointer)) {
-                            if (PassageNumber == 2) {
-                                counter++;
-                                fprintf (output, "%d,", labels[*pointer - '0']);
-                                counter++;
-                                fprintf (output, "%lu,", counter);
-                            }
+                            counter++;
+                            counter++;
+                            capacity++;
+                            capacity++;
+                            sprintf (Bytecode, "%d", labels[*pointer - '0']);
+                            Bytecode += strlen (Bytecode) + 1;
+                            sprintf (Bytecode, "%lu", counter);
+                            Bytecode += strlen (Bytecode) + 1;
+                            pointer += strlen (pointer);
                         }
                         else {
                             printf ("syntax error\n");
@@ -377,214 +254,26 @@ int main (int argc, char* argv[]) {
                     }
                     pointer++;
                 }
-                else if (strcmp (pointer , "JMP") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 50);
-                    }
-                    pointer += strlen ("JMP");
-                    while(!isalpha(*pointer)) {
-                        if (isdigit(*pointer) && PassageNumber == 2) {
-                            fprintf (output, "%c", *pointer );
-                        }
-                        if (*pointer == ':') {
-                            pointer++;
-                            if (isdigit (*pointer)) {
-                                if (PassageNumber == 2) {
-                                    fprintf (output, "%d", labels[*pointer - '0']);
-                                }
-                            }
-                            else {
-                                printf ("syntax error\n");
-                            }
-                        }
-                        pointer++;
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
-                    }
-                    counter++;
-                }
-                else if (strcmp (pointer , "JNE") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 51);
-                    }
-                    pointer += strlen ("JNE");
-                    while(!isalpha(*pointer)) {
-                        if (isdigit(*pointer) && PassageNumber == 2) {
-                            fprintf (output, "%c", *pointer );
-                        }
-                        if (*pointer == ':') {
-                            pointer++;
-                            if (isdigit (*pointer)) {
-                                if (PassageNumber == 2) {
-                                    fprintf (output, "%d", labels[*pointer - '0']);
-                                }
-                            }
-                            else {
-                                printf ("syntax error\n");
-                            }
-                        }
-                        pointer++;
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
-                    }
-                    counter++;
-                }
-                else if (strcmp (pointer , "JE") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 52);
-                    }
-                    pointer += strlen ("JE");
-                    while(!isalpha(*pointer)) {
-                        if (isdigit(*pointer) && PassageNumber == 2) {
-                            fprintf (output, "%c", *pointer );
-                        }
-                        if (*pointer == ':') {
-                            pointer++;
-                            if (isdigit (*pointer)) {
-                                if (PassageNumber == 2) {
-                                    fprintf (output, "%d", labels[*pointer - '0']);
-                                }
-                            }
-                            else {
-                                printf ("syntax error\n");
-                            }
-                        }
-                        pointer++;
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
-                    }
-                    counter++;
-                }
-                else if (strcmp (pointer , "JAE") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 53);
-                    }
-                    pointer += strlen ("JAE");
-                    while(!isalpha(*pointer)) {
-                        if (isdigit(*pointer) && PassageNumber == 2) {
-                            fprintf (output, "%c", *pointer );
-                        }
-                        if (*pointer == ':') {
-                            pointer++;
-                            if (isdigit (*pointer)) {
-                                if (PassageNumber == 2) {
-                                    fprintf (output, "%d", labels[*pointer - '0']);
-                                }
-                            }
-                            else {
-                                printf ("syntax error\n");
-                            }
-                        }
-                        pointer++;
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
-                    }
-                    counter++;
-                }
-                else if (strcmp (pointer , "JBE") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 54);
-                    }
-                    pointer += strlen ("JBE");
-                    while(!isalpha(*pointer)) {
-                        if (isdigit(*pointer) && PassageNumber == 2) {
-                            fprintf (output, "%c", *pointer );
-                        }
-                        if (*pointer == ':') {
-                            pointer++;
-                            if (isdigit (*pointer)) {
-                                if (PassageNumber == 2) {
-                                    fprintf (output, "%d", labels[*pointer - '0']);
-                                }
-                            }
-                            else {
-                                printf ("syntax error\n");
-                            }
-                        }
-                        pointer++;
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
-                    }
-                    counter++;
-                }
-                else if (strcmp (pointer , "JA") == 0){
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 55);
-                    }
-                    pointer += strlen ("JA");
-                    while(!isalpha(*pointer)) {
-                        if (isdigit(*pointer) && PassageNumber == 2) {
-                            fprintf (output, "%c", *pointer );
-                        }
-                        if (*pointer == ':') {
-                            pointer++;
-                            if (isdigit (*pointer)) {
-                                if (PassageNumber == 2) {
-                                    fprintf (output, "%d", labels[*pointer - '0']);
-                                }
-                            }
-                            else {
-                                printf ("syntax error\n");
-                            }
-                        }
-                        pointer++;
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
-                    }
-                    counter++;
-                }
-                else if (strcmp (pointer , "JB") == 0) {
-                    counter++;
-                    if (PassageNumber == 2) {
-                        fprintf (output, "%d,", 56);
-                    }
-                    pointer += strlen ("JB");
-                    while(!isalpha(*pointer)) {
-                        if (isdigit(*pointer) && PassageNumber == 2) {
-                            fprintf (output, "%c", *pointer );
-                        }
-                        if (*pointer == ':') {
-                            pointer++;
-                            if (isdigit (*pointer)) {
-                                if (PassageNumber == 2) {
-                                    fprintf (output, "%d", labels[*pointer - '0']);
-                                }
-                            }
-                            else {
-                                printf ("syntax error\n");
-                            }
-                        }
-                        pointer++;
-                    }
-                    if (PassageNumber == 2) {
-                        fprintf (output, ",");
-                    }
-                    counter++;
-                }
+
+                ALL_JUMPS_CHECK //it is a macro that finds all jumps
+
                 else if (*pointer == '\0') {
                     pointer++;
                 }
                 else if (strcmp (pointer, "HLT") == 0) {
                     counter++;
+                    sscanf ("0", "%s", Bytecode);
+                    capacity++;
+                    Bytecode += strlen ("0") + 1;
+                    strcat (Bytecode, "|");
+                    sprintf (Bytecode + strlen("|"), "%lu", counter);
+                    capacity++;
                     if (PassageNumber == 2) {
-                        fprintf (output, "%d", 0);
-                        fprintf (output, "|%lu", counter);
                         break;
                     }
                     else {
                         PassageNumber = 2;
+                        Bytecode = temp;
                         pointer = buffer;
                         counter = 0;
                     }
@@ -594,7 +283,15 @@ int main (int argc, char* argv[]) {
                     pointer++;
                 }
             }
+        Bytecode = temp;
+        printf ("capacity %lu\n", capacity);
+        for (size_t i; i < capacity / 2; i++) {
+            fprintf (output, "%s ", temp);
+            temp += strlen (temp) + 1;
+        }
+
         free(buffer);
+        free(Bytecode);
         }
         else {
             printf ("can't read the given files\n");
@@ -604,6 +301,4 @@ int main (int argc, char* argv[]) {
             printf("the amount of arguments in terminal is wrong\n");
     }
 }
-
-
 
