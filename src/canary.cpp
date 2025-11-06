@@ -2,10 +2,12 @@
 
 StackErr_t canary(stack_t* stk) {
     StackErr_t err = StackVerify(stk);
+    type* temp = stk->array;
     if (err != ADRESS) {
         size_t const capacity = stk->capacity;
 
         stk->array = (type*) realloc (stk->array, (capacity + 2) * sizeof (type));
+        
         if (stk->array) {
             for (int ind = capacity; ind > 0; ind--) {
                 stk->array[ind + 1] = stk->array[ind];
@@ -15,8 +17,10 @@ StackErr_t canary(stack_t* stk) {
             stk->canary_indicator = 1;
         }
         else {
+            stk->array = temp;
             printf ("memory cannot be allocated");
         }
     }
     return StackVerify(stk);
 }
+
