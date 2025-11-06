@@ -14,6 +14,9 @@ StackErr_t canary(stack_t* stk) {
             (stk->array) [capacity + 1] = RIGHT;
             stk->canary_indicator = 1;
         }
+        else {
+            printf ("memory cannot be allocated");
+        }
     }
     return StackVerify(stk);
 }
